@@ -1,0 +1,10 @@
+{
+  "name": "facebook-node-sdk",
+  "version": "0.0.1",
+  "description": "Node.js SDK for the Facebook API",
+  "author": "Hitoshi Amano <seijro@gmail.com>",
+  "devDependencies": {
+    "nodeunit": ">=0.0.9"
+  },
+  "main": "./lib/facebook"
+}
