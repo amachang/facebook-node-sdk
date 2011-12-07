@@ -2,9 +2,23 @@
   "name": "facebook-node-sdk",
   "version": "0.0.1",
   "description": "Node.js SDK for the Facebook API",
+  "tags": ["facebook"],
   "author": "Hitoshi Amano <seijro@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amachang/facebook-node-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amachang/facebook-node-sdk/issues"
+  },
+  "license": [
+    {
+      "type": "MIT",
+      "url": "https://raw.github.com/amachang/facebook-node-sdk/master/LICENSE"
+    }
+  ],
   "devDependencies": {
-    "nodeunit": ">=0.0.9"
+    "nodeunit": ">=0.6.4"
   },
   "main": "./lib/facebook"
 }
