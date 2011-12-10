@@ -417,6 +417,67 @@ module.exports = {
     });
   },
 
+  getAccessTokenFromCode: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret,
+      request: {
+        connection: {},
+        headers: {}
+      }
+    });
+    facebook.getAccessTokenFromCode('dummy', '', function(err, response) {
+      assert.equal(err, null);
+      assert.equal(response, false);
+      facebook.getAccessTokenFromCode(null, '', function() {
+        assert.equal(err, null);
+        assert.equal(response, false);
+
+        facebook.oauthRequest = function(host, path, params, callback) {
+          assert.equal(host, 'graph.facebook.com');
+          assert.equal(path, '/oauth/access_token');
+          assert.equal(params.client_id, config.appId);
+          assert.equal(params.client_secret, config.secret);
+          assert.equal(params.redirect_uri, 'http://example.com/');
+          assert.equal(params.code, 'dummy');
+          callback(new Error('test'), null);
+        };
+        facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+          assert.ok(err instanceof Error);
+          assert.equal(err.message, 'test');
+          assert.equal(response, null);
+
+          facebook.oauthRequest = function(host, path, params, callback) {
+            callback(new BaseFacebook.FacebookApiError({}), null);
+          };
+          facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+            assert.equal(err, null);
+            assert.equal(response, false);
+
+            facebook.oauthRequest = function(host, path, params, callback) {
+              callback(null, {});
+            };
+            facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+              assert.equal(err, null);
+              assert.equal(response, false);
+
+              facebook.oauthRequest = function(host, path, params, callback) {
+                callback(null, { access_token: 'test_access_token' });
+              };
+              facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+                assert.equal(err, null);
+                assert.equal(response, false);
+                done = true;
+              });
+            });
+          });
+        });
+      });
+    });
+  },
+
   apiForLoggedOutUsers: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
@@ -919,6 +980,19 @@ module.exports = {
     done = true;
   },
 
+  nonGeneralSignedToken: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: 'secret-dummy'
+    });
+    var data = facebook.parseSignedRequest('2mYrTJ6TkHRZ1iLlFFt3He30-e5cSgvN5U9COCqoPvE.eyAiaG9nZSI6ICJmdWdhIiwgImFsZ29yaXRobSI6ICJITUFDLVNIQTI1NiIgfQ');
+    assert.equal(data.hoge, 'fuga');
+    assert.equal(data.algorithm, 'HMAC-SHA256');
+    done = true;
+  },
+
 /*
   public function testBundledCACert() {
     $facebook = new TransientFacebook(array(
@@ -1019,6 +1093,146 @@ module.exports = {
     });
   },
 
+  getUserAccessToken: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: 'dummy',
+      secret: 'secret-dummy',
+      request: {
+        connection: {},
+        headers: {},
+        body: {
+          signed_request: '0GCZT4MghxPvJ7dDH84rLxeNp01h5FstqDVKuBHHkH8.eyAiY29kZSI6ICJkdW1teSIsICJhbGdvcml0aG0iOiAiSE1BQy1TSEEyNTYiIH0'
+        }
+      }
+    });
+    facebook.getAccessTokenFromCode = function(code, redirectUri, callback) {
+      assert.equal(code, 'dummy');
+      callback(new Error('test'), null);
+    };
+    facebook.getUserAccessToken(function(err, accessToken) {
+      assert.ok(err instanceof Error);
+      assert.equal(err.message, 'test');
+      assert.equal(accessToken, null);
+      assert.equal(facebook.getPersistentData('code'), false);
+      assert.equal(facebook.getPersistentData('access_token'), false);
+
+      facebook.getAccessTokenFromCode = function(code, redirectUri, callback) {
+        callback(null, 'dummy-access-token');
+      };
+      facebook.getUserAccessToken(function(err, accessToken) {
+        assert.equal(err, null);
+        assert.equal(accessToken, 'dummy-access-token');
+        assert.equal(facebook.getPersistentData('code'), 'dummy');
+        assert.equal(facebook.getPersistentData('access_token'), 'dummy-access-token');
+
+        facebook.getAccessTokenFromCode = function(code, redirectUri, callback) {
+          callback(null, false);
+        };
+
+        facebook.getUserAccessToken(function(err, accessToken) {
+          assert.equal(err, null);
+          assert.equal(accessToken, false);
+          assert.equal(facebook.getPersistentData('code'), false);
+          assert.equal(facebook.getPersistentData('access_token'), false);
+
+          facebook = new TransientFacebook({
+            appId: 'dummy',
+            secret: 'secret-dummy',
+            request: {
+              connection: {},
+              headers: {},
+              body: {
+                signed_request: 'Sy3mhK4xP9RWsN905MP1sJrkbkGrXgz2y7r-Fx6lqBU.eyAiYWxnb3JpdGhtIjogIkhNQUMtU0hBMjU2IiB9'
+              }
+            }
+          });
+
+          facebook.setPersistentData('code', 'bad data');
+          facebook.setPersistentData('access_token', 'bad data');
+          facebook.getUserAccessToken(function(err, accessToken) {
+            assert.equal(err, null);
+            assert.equal(accessToken, false);
+            assert.equal(facebook.getPersistentData('code'), false);
+            assert.equal(facebook.getPersistentData('access_token'), false);
+
+            facebook = new TransientFacebook({
+              appId: 'dummy',
+              secret: 'secret-dummy',
+              request: {
+                connection: {},
+                headers: {},
+                query: {
+                  code: 'dummy-code',
+                  state: 'dummy-state'
+                }
+              },
+              store: {
+                state: 'dummy-state'
+              }
+            });
+
+            var responseReturned = false;
+            facebook.getAccessTokenFromCode = function(code, redirectUri, callback) {
+              assert.equal(err, null);
+              assert.equal(code, 'dummy-code');
+              responseReturned = true;
+              callback(null, false);
+            };
+            facebook.getUserAccessToken(function(err, accessToken) {
+              assert.equal(err, null);
+              assert.equal(accessToken, false);
+              assert.ok(responseReturned);
+              done = true;
+            });
+          });
+        });
+      });
+    });
+  },
+
+  getUserFromAvailableData: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: 'dummy',
+      secret: 'secret-dummy',
+      request: {
+        connection: {},
+        headers: {},
+        body: {
+          signed_request: 'Sy3mhK4xP9RWsN905MP1sJrkbkGrXgz2y7r-Fx6lqBU.eyAiYWxnb3JpdGhtIjogIkhNQUMtU0hBMjU2IiB9'
+        }
+      }
+    });
+    facebook.getUserFromAvailableData(function(err, user) {
+      assert.equal(err, null);
+      assert.equal(user, 0);
+
+      facebook = new TransientFacebook({
+        appId: config.appId,
+        secret: config.secret,
+        request: {
+          connection: {},
+          headers: {},
+          body: {}
+        }
+      });
+
+      facebook.getAccessToken = function(callback) {
+        callback(new Error('test'), null);
+      };
+      facebook.getUserFromAvailableData(function(err, user) {
+        assert.ok(err instanceof Error);
+        assert.equal(user, null);
+        assert.equal(err.message, 'test');
+        done = true;
+      });
+    });
+  },
+
   makeRequest: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
@@ -1036,8 +1250,8 @@ module.exports = {
   }
 };
 
-function TransientFacebook() {
-  this.store = {};
+function TransientFacebook(params) {
+  this.store = this.mergeObject({}, params.store || {});
   BaseFacebook.apply(this, arguments);
 };
 
@@ -1048,7 +1262,7 @@ TransientFacebook.prototype.setPersistentData = function(key, value) {
 };
 
 TransientFacebook.prototype.getPersistentData = function(key, defaultValue) {
-  return this.store[key] || defaultValue;
+  return this.store.hasOwnProperty(key) ? (this.store[key]) : (defaultValue === undefined ? false : defaultValue);
 };
 
 TransientFacebook.prototype.clearPersistentData = function(key) {
