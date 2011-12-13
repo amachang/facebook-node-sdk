@@ -485,7 +485,15 @@ module.exports = {
               facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
                 assert.equal(err, null);
                 assert.equal(response, false);
-                done = true;
+
+                facebook.oauthRequest = function(host, path, params, callback) {
+                  callback(null, 'access_token=dummy-access-token&expires=3600');
+                };
+                facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+                  assert.equal(err, null);
+                  assert.equal(response, 'dummy-access-token');
+                  done = true;
+                });
               });
             });
           });
