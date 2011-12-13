@@ -1228,7 +1228,58 @@ module.exports = {
         assert.ok(err instanceof Error);
         assert.equal(user, null);
         assert.equal(err.message, 'test');
-        done = true;
+
+        facebook = new TransientFacebook({
+          appId: config.appId,
+          secret: config.secret,
+          request: {
+            connection: {},
+            headers: {},
+            body: {}
+          },
+          store: {
+            access_token: 'dummy'
+          }
+        });
+
+        var called = false;
+        facebook.api = function(method, callback) {
+          assert.equal(method, '/me');
+          called = true;
+          callback(new Error('test'), null);
+        };
+        facebook.getUserFromAvailableData(function(err, user) {
+          assert.ok(called);
+          assert.equal(err, null);
+          assert.equal(user, 0);
+
+          var appToken = facebook.getApplicationAccessToken();
+
+          facebook = new TransientFacebook({
+            appId: config.appId,
+            secret: config.secret,
+            request: {
+              connection: {},
+              headers: {},
+              body: {}
+            },
+            store: {
+              access_token: appToken
+            }
+          });
+
+          var called0 = false;
+          facebook.api = function(method, callback) {
+            called0 = true;
+            callback(new Error('test'), null);
+          };
+          facebook.getUserFromAvailableData(function(err, user) {
+            assert.equal(called0, false);
+            assert.equal(err, null);
+            assert.equal(user, 0);
+            done = true;
+          });
+        });
       });
     });
   },
