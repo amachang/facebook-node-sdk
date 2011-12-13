@@ -201,6 +201,22 @@ module.exports = {
     currentUrl = facebook.getCurrentUrl();
     assert.equal('http://www.test.com/unit-tests.php', currentUrl);
 
+    facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret,
+      currentUrl: 'http://example.com/',
+      request: {
+        connection: {
+        },
+        headers: {
+          host: 'www.test.com'
+        },
+        url: '/unit-tests.php?state=hoge'
+      }
+    });
+
+    assert.equal(facebook.getCurrentUrl(), 'http://example.com/');
+
     done = true;
   },
 
