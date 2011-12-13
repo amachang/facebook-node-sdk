@@ -28,6 +28,35 @@ var config = {
 
 module.exports = {
 
+  clearAllPersistentData: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var app = express.createServer();
+    app.configure(function () {
+      app.use(express.bodyParser());
+      app.use(express.cookieParser());
+      app.use(express.session({ secret: 'foo bar' }));
+      app.use(Facebook.middleware(config));
+    });
+
+    // Test clearAllPersistentData don't break session
+    app.get('/', function(req, res) {
+      req.facebook.clearAllPersistentData();
+      if (req.session.cookie) {
+        res.send('ok');
+      }
+      else {
+        res.send('ng');
+      }
+    });
+
+    assert.response(app, { url: '/' }, function(res) {
+      assert.equal(res.body, 'ok');
+      done = true;
+    });
+  },
+
   middleware: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
