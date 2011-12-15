@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/amachang/facebook-node-sdk.git"
   },
+  "scripts": {
+    "test": "TEST_FB_APP_ID=227710073967374 TEST_FB_SECRET=a25a2216fb1b772f1c554ebb9d950aec node_modules/.bin/expresso test/*"
+  },
   "bugs": {
     "url": "https://github.com/amachang/facebook-node-sdk/issues"
   },
