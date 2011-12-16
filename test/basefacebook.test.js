@@ -1324,6 +1324,34 @@ module.exports = {
     });
   },
 
+  graph: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+
+    facebook.graph('/amachang', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.id, '1055572299');
+      facebook.graph('/amachang', 'POST', function(err, data) {
+        assert.ok(err instanceof Error);
+        assert.equal(data, null);
+        facebook.graph('/', { ids: 'amachang,yukoba' }, function(err, data) {
+          assert.equal(data.amachang.id, '1055572299');
+          assert.equal(data.yukoba.id, '1192222589');
+          facebook.graph('invalid path', function(err, data) {
+            assert.ok(err instanceof Error);
+            assert.equal(data, null);
+            done = true;
+          });
+        });
+      });
+    });
+  },
+
   makeRequest: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
