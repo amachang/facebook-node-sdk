@@ -1,6 +1,6 @@
 {
   "name": "facebook-node-sdk",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Node.js SDK for the Facebook API",
   "tags": ["facebook"],
   "author": "Hitoshi Amano <seijro@gmail.com>",
