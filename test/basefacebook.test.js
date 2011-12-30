@@ -844,7 +844,30 @@ module.exports = {
     facebook.getLogoutUrl(function(err, url) {
       assert.equal(err, null);
       assert.notEqual(url.indexOf(encodedUrl), -1, 'Expect the current url to exist.');
-      done = true;
+
+      var facebook = new TransientFacebook({
+        appId: 'dummy',
+        secret: 'dummy'
+      });
+      facebook.getUserAccessToken = function(callback) {
+        callback(new Error('dummy-error'), null);
+      };
+      facebook.getLogoutUrl(function(err, url) {
+        assert.notEqual(err, null);
+        assert.equal(err.message, 'dummy-error');
+        assert.equal(url, null);
+
+        var facebook = new TransientFacebook({
+          appId: 'dummy',
+          secret: 'dummy'
+        });
+        facebook.getLogoutUrl(function(err, url) {
+          assert.notEqual(err, null);
+          assert.equal(err.message, 'No request object.');
+          assert.equal(url, null);
+          done = true;
+        });
+      });
     });
   },
 
@@ -1013,6 +1036,19 @@ module.exports = {
       }
     };
     assert.deepEqual(facebook.getSignedRequest(), payload);
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        body: {
+          signed_request: 'dummy'
+        }
+      }
+    });
+    facebook.errorLog = function() {};
+    assert.equal(facebook.getSignedRequest(), null);
+
     done = true;
   },
 
@@ -1100,7 +1136,10 @@ module.exports = {
       assert.equal('foobar', accessToken, 'Get access token from persistent store.');
       facebook.getUser(function(err, user) {
         assert.equal('12345', user, 'Get user id from persistent store.');
-        done = true;
+        facebook.getUser(function(err, user) {
+          assert.equal('12345', user, 'Get user again');
+          done = true;
+        });
       });
     });
   },
@@ -1145,6 +1184,44 @@ module.exports = {
 
     facebook.getUser(function(err, user) {
       assert.equal(user, 0);
+      done = true;
+    });
+  },
+
+  getUserWithAvailableDataError: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+
+    facebook.getUserFromAvailableData = function(callback) {
+      callback(new Error('dummy'), null);
+    };
+    facebook.getUser(function(err, user) {
+      assert.notEqual(err, null);
+      assert.equal(err.message, 'dummy');
+      assert.equal(user, null);
+      done = true;
+    });
+  },
+
+  getAccessTokenWithUserAccessTokenError: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: 'dummy',
+      secret: 'secret-dummy'
+    });
+    facebook.getUserAccessToken = function(callback) {
+      callback(new Error('dummy-error'), null);
+    };
+    facebook.getAccessToken(function(err, accessToken) {
+      assert.notEqual(err, null);
+      assert.equal(err.message, 'dummy-error');
+      assert.equal(accessToken, null);
       done = true;
     });
   },
@@ -1333,7 +1410,36 @@ module.exports = {
             assert.equal(called0, false);
             assert.equal(err, null);
             assert.equal(user, 0);
-            done = true;
+
+            facebook = new TransientFacebook({
+              appId: config.appId,
+              secret: config.secret,
+              request: {
+                connection: {},
+                headers: {},
+                body: {}
+              },
+              store: {
+                access_token: 'dummy_access_token'
+              }
+            });
+            facebook.getUserFromAccessToken = function(callback) {
+              callback(new Error('error-message'), null);
+            };
+            facebook.getUserFromAvailableData(function(err, user) {
+              assert.notEqual(err, null);
+              assert.equal(err.message, 'error-message');
+              assert.equal(user, null);
+
+              facebook.getUserFromAccessToken = function(callback) {
+                callback(null, '1323');
+              };
+              facebook.getUserFromAvailableData(function(err, user) {
+                assert.equal(err, null);
+                assert.equal(user, '1323');
+                done = true;
+              });
+            });
           });
         });
       });
