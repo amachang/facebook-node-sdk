@@ -544,7 +544,7 @@ module.exports = {
 
     facebook.api({ method: 'fql.query', query: 'SELECT name FROM user WHERE uid=4' }, function(err, response) {
       assert.equal(err, null);
-      assert.ok(util.isArray(response));
+      assert.ok(isArray(response));
       assert.equal(response.length, 1, 'Expect one row back.');
       assert.equal(response[0].name, 'Mark Zuckerberg', 'Expect the name back.');
       done = true;
@@ -1407,4 +1407,8 @@ TransientFacebook.prototype.clearPersistentData = function(key) {
 TransientFacebook.prototype.clearAllPersistentData = function() {
   this.store = {};
 };
+
+function isArray(ar) {
+  return Array.isArray(ar) || (typeof ar === 'object' && Object.prototype.toString.call(ar) === '[object Array]');
+}
 
