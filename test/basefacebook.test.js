@@ -56,6 +56,8 @@ module.exports = {
     });
     assert.equal(facebook.getAppId(), config.appId, 'Expect the App ID to be set.');
     assert.equal(facebook.getApiSecret(), config.secret, 'Expect the API secret to be set.');
+    assert.ok(facebook.getFileUploadSupport(), 'Expect file upload support to be on.');
+    // alias (depricated) for getFileUploadSupport -- test until removed
     assert.ok(facebook.useFileUploadSupport(), 'Expect file upload support to be on.');
     done = true;
   },
@@ -108,8 +110,12 @@ module.exports = {
       appId: config.appId,
       secret: config.secret
     });
+    assert.equal(facebook.getFileUploadSupport(), false, 'Expect file upload support to be off.');
+    // alias for getFileUploadSupport (depricated), testing until removed
     assert.equal(facebook.useFileUploadSupport(), false, 'Expect file upload support to be off.');
     facebook.setFileUploadSupport(true);
+    assert.ok(facebook.getFileUploadSupport(), 'Expect file upload support to be on.');
+    // alias for getFileUploadSupport (depricated), testing until removed
     assert.ok(facebook.useFileUploadSupport(), 'Expect file upload support to be on.');
     done = true;
   },
