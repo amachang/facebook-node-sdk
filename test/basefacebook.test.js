@@ -1,31 +1,11 @@
 var path = require('path');
 var util = require('util');
-var assert = require('assert');
 var url = require('url');
-var fs = require('fs');
+var testUtil = require('./lib/testutil.js');
 
-var basedir = path.join(__dirname, '..');
-var covdir = path.join(basedir, 'lib-cov');
-var libdir = path.join(basedir, 'lib');
+var BaseFacebook = require(path.join(testUtil.libdir, 'basefacebook.js'));
 
-try {
-  var stat = fs.statSync(covdir);
-  if (stat.isDirectory()) {
-    libdir = covdir;
-  }
-}
-catch (e) {
-}
-
-var BaseFacebook = require(path.join(libdir, 'basefacebook.js'));
-
-assert.ok('TEST_FB_APP_ID' in process.env);
-assert.ok('TEST_FB_SECRET' in process.env);
-
-var config = {
-  appId: process.env.TEST_FB_APP_ID,
-  secret: process.env.TEST_FB_SECRET
-};
+var config = testUtil.fbDefaultConfig;
 
 module.exports = {
 
