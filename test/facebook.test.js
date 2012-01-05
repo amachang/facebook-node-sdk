@@ -58,8 +58,6 @@ module.exports = {
       assert.equal(res.body, '0');
       done = true;
     });
-
-    done = true;
   },
 
   middleware: function(beforeExit, assert) {
