@@ -1477,6 +1477,28 @@ module.exports = {
     });
   },
 
+  destroySession: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        cookies: {
+            fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ'
+        }
+      }
+    });
+
+    assert.notEqual(facebook.getSignedRequest(), null);
+    delete facebook.request.cookies.fbsr_117743971608120;
+    facebook.destroySession();
+    assert.equal(facebook.getSignedRequest(), null);
+
+    done = true;
+  },
+
   makeRequest: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
