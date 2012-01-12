@@ -19,7 +19,9 @@ module.exports = {
       secret: config.secret
     });
     assert.equal(facebook.getAppId(), config.appId, 'Expect the App ID to be set.');
-    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the API secret to be set.');
+    assert.equal(facebook.getAppSecret(), config.secret, 'Expect the app secret to be set.');
+    // for compatibility
+    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the app secret to be set.');
     assert.equal(facebook.getApplicationAccessToken(), config.appId + '|' + config.secret);
     done = true;
   },
@@ -35,7 +37,9 @@ module.exports = {
       fileUpload: true
     });
     assert.equal(facebook.getAppId(), config.appId, 'Expect the App ID to be set.');
-    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the API secret to be set.');
+    assert.equal(facebook.getAppSecret(), config.secret, 'Expect the app secret to be set.');
+    // for compatibility
+    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the app secret to be set.');
     assert.ok(facebook.getFileUploadSupport(), 'Expect file upload support to be on.');
     // alias (depricated) for getFileUploadSupport -- test until removed
     assert.ok(facebook.useFileUploadSupport(), 'Expect file upload support to be on.');
@@ -54,6 +58,7 @@ module.exports = {
     done = true;
   },
 
+  // for compatibility
   setApiSecret: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
@@ -62,7 +67,19 @@ module.exports = {
       secret: config.secret
     });
     facebook.setApiSecret('dummy');
-    assert.equal(facebook.getApiSecret(), 'dummy', 'Expect the API secret to be dummy.');
+    assert.equal(facebook.getApiSecret(), 'dummy', 'Expect the app secret to be dummy.');
+    done = true;
+  },
+
+  setAppSecret: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+    facebook.setAppSecret('dummy');
+    assert.equal(facebook.getAppSecret(), 'dummy', 'Expect the app secret to be dummy.');
     done = true;
   },
 
