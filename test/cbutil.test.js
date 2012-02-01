@@ -56,18 +56,17 @@ module.exports = {
     var errorCount = 0;
 
     var write_ = process.stderr.write
-    process.stderr.write = function() {  };
     beforeExit(function() {
       process.stderr.write = write_;
       assert.equal(calledCount, 1);
       assert.equal(errorCount, 2);
       assert.ok(done)
+      cb.errorLog = log;
     });
 
-    cb.errorLog_ = cb.errorLog;
+    var log = cb.errorLog;
     cb.errorLog = function(msg) {
       errorCount++;
-      cb.errorLog_(msg);
     };
 
     var wrapped = cb.wrap(function wrapped(callback) {
