@@ -61,7 +61,6 @@ module.exports = {
       assert.equal(calledCount, 1);
       assert.equal(errorCount, 2);
       assert.ok(done)
-      cb.errorLog = log;
     });
 
     var log = cb.errorLog;
@@ -79,6 +78,8 @@ module.exports = {
       done = true;
       throw Error('test'); // error 2
     });
+
+    cb.errorLog = log;
   }
 
 };
