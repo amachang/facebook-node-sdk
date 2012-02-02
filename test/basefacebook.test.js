@@ -639,6 +639,7 @@ module.exports = {
     });
 
     facebook.api('/amachang', 'DELETE', function(err, response) {
+      console.log(err, response);
       assert.equal(response, null);
       assert.notEqual(err, null);
       assert.equal(err + '',
@@ -1447,6 +1448,72 @@ module.exports = {
         });
       });
     });
+  },
+
+  isVideoPost: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+
+    assert.equal(facebook.isVideoPost('/me/videos'), false);
+    assert.equal(facebook.isVideoPost('/foo/videos', 'GET'), false);
+    assert.equal(facebook.isVideoPost('/bar/videos', 'POST'), true);
+    assert.equal(facebook.isVideoPost('/me/videossss', 'POST'), false);
+    assert.equal(facebook.isVideoPost('/videos', 'POST'), false);
+    assert.equal(facebook.isVideoPost('/baz', 'POST'), false);
+
+    done = true;
+  },
+
+  requestToGraphVideoDomain: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+
+    facebook.makeRequest = function(host, path, params, callback) {
+      assert.equal(host, 'graph-video.facebook.com');
+      callback(null, '{ "test": "ok" }');
+    };
+
+    facebook.graph('/amachang/videos', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.graph('/foo/videos', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.makeRequest = function(host, path, params, callback) {
+      assert.equal(host, 'graph.facebook.com');
+      callback(null, '{ "test": "ok" }');
+    };
+
+    facebook.graph('/bar/videossss', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.graph('/videos', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.graph('/baz/videos', 'GET', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    done = true;
   },
 
   graph: function(beforeExit, assert) {
