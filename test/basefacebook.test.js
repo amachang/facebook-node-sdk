@@ -1552,6 +1552,9 @@ module.exports = {
       appId: '117743971608120',
       secret: '943716006e74d9b9283d4d5d8ab93204',
       request: {
+        headers: {
+          host: 'www.test.com'
+        },
         cookies: {
             fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ'
         }
@@ -1559,9 +1562,71 @@ module.exports = {
     });
 
     assert.notEqual(facebook.getSignedRequest(), null);
-    delete facebook.request.cookies.fbsr_117743971608120;
     facebook.destroySession();
     assert.equal(facebook.getSignedRequest(), null);
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        headers: {
+          host: 'www.test.com'
+        },
+        cookies: {
+            fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ'
+        }
+      },
+      response: {
+        clearCookie: function(cookieName, options) {
+          clearCookieLogs.push({
+            name: cookieName,
+            path: options.path,
+            domain: options.domain
+          });
+        }
+      }
+    });
+
+    var clearCookieLogs = [];
+
+    facebook.destroySession();
+
+    assert.equal(clearCookieLogs.length, 1);
+    assert.equal(clearCookieLogs[0].name, 'fbsr_117743971608120');
+    assert.equal(clearCookieLogs[0].path, '/');
+    assert.equal(clearCookieLogs[0].domain, '.www.test.com');
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        headers: {
+          host: 'www.test.com'
+        },
+        cookies: {
+          fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ',
+          fbm_117743971608120: 'base_domain=basedomain.test.com'
+        }
+      },
+      response: {
+        clearCookie: function(cookieName, options) {
+          clearCookieLogs.push({
+            name: cookieName,
+            path: options.path,
+            domain: options.domain
+          });
+        }
+      }
+    });
+
+    clearCookieLogs = [];
+
+    facebook.destroySession();
+
+    assert.equal(clearCookieLogs.length, 1);
+    assert.equal(clearCookieLogs[0].name, 'fbsr_117743971608120');
+    assert.equal(clearCookieLogs[0].path, '/');
+    assert.equal(clearCookieLogs[0].domain, 'basedomain.test.com');
 
     done = true;
   },
