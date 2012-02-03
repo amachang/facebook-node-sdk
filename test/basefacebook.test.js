@@ -1,31 +1,11 @@
 var path = require('path');
 var util = require('util');
-var assert = require('assert');
 var url = require('url');
-var fs = require('fs');
+var testUtil = require('./lib/testutil.js');
 
-var basedir = path.join(__dirname, '..');
-var covdir = path.join(basedir, 'lib-cov');
-var libdir = path.join(basedir, 'lib');
+var BaseFacebook = require(path.join(testUtil.libdir, 'basefacebook.js'));
 
-try {
-  var stat = fs.statSync(covdir);
-  if (stat.isDirectory()) {
-    libdir = covdir;
-  }
-}
-catch (e) {
-}
-
-var BaseFacebook = require(path.join(libdir, 'basefacebook.js'));
-
-assert.ok('TEST_FB_APP_ID' in process.env);
-assert.ok('TEST_FB_SECRET' in process.env);
-
-var config = {
-  appId: process.env.TEST_FB_APP_ID,
-  secret: process.env.TEST_FB_SECRET
-};
+var config = testUtil.fbDefaultConfig;
 
 module.exports = {
 
@@ -39,7 +19,9 @@ module.exports = {
       secret: config.secret
     });
     assert.equal(facebook.getAppId(), config.appId, 'Expect the App ID to be set.');
-    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the API secret to be set.');
+    assert.equal(facebook.getAppSecret(), config.secret, 'Expect the app secret to be set.');
+    // for compatibility
+    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the app secret to be set.');
     assert.equal(facebook.getApplicationAccessToken(), config.appId + '|' + config.secret);
     done = true;
   },
@@ -55,7 +37,11 @@ module.exports = {
       fileUpload: true
     });
     assert.equal(facebook.getAppId(), config.appId, 'Expect the App ID to be set.');
-    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the API secret to be set.');
+    assert.equal(facebook.getAppSecret(), config.secret, 'Expect the app secret to be set.');
+    // for compatibility
+    assert.equal(facebook.getApiSecret(), config.secret, 'Expect the app secret to be set.');
+    assert.ok(facebook.getFileUploadSupport(), 'Expect file upload support to be on.');
+    // alias (depricated) for getFileUploadSupport -- test until removed
     assert.ok(facebook.useFileUploadSupport(), 'Expect file upload support to be on.');
     done = true;
   },
@@ -72,6 +58,7 @@ module.exports = {
     done = true;
   },
 
+  // for compatibility
   setApiSecret: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
@@ -80,7 +67,19 @@ module.exports = {
       secret: config.secret
     });
     facebook.setApiSecret('dummy');
-    assert.equal(facebook.getApiSecret(), 'dummy', 'Expect the API secret to be dummy.');
+    assert.equal(facebook.getApiSecret(), 'dummy', 'Expect the app secret to be dummy.');
+    done = true;
+  },
+
+  setAppSecret: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+    facebook.setAppSecret('dummy');
+    assert.equal(facebook.getAppSecret(), 'dummy', 'Expect the app secret to be dummy.');
     done = true;
   },
 
@@ -108,8 +107,12 @@ module.exports = {
       appId: config.appId,
       secret: config.secret
     });
+    assert.equal(facebook.getFileUploadSupport(), false, 'Expect file upload support to be off.');
+    // alias for getFileUploadSupport (depricated), testing until removed
     assert.equal(facebook.useFileUploadSupport(), false, 'Expect file upload support to be off.');
     facebook.setFileUploadSupport(true);
+    assert.ok(facebook.getFileUploadSupport(), 'Expect file upload support to be on.');
+    // alias for getFileUploadSupport (depricated), testing until removed
     assert.ok(facebook.useFileUploadSupport(), 'Expect file upload support to be on.');
     done = true;
   },
@@ -636,6 +639,7 @@ module.exports = {
     });
 
     facebook.api('/amachang', 'DELETE', function(err, response) {
+      console.log(err, response);
       assert.equal(response, null);
       assert.notEqual(err, null);
       assert.equal(err + '',
@@ -1446,6 +1450,72 @@ module.exports = {
     });
   },
 
+  isVideoPost: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+
+    assert.equal(facebook.isVideoPost('/me/videos'), false);
+    assert.equal(facebook.isVideoPost('/foo/videos', 'GET'), false);
+    assert.equal(facebook.isVideoPost('/bar/videos', 'POST'), true);
+    assert.equal(facebook.isVideoPost('/me/videossss', 'POST'), false);
+    assert.equal(facebook.isVideoPost('/videos', 'POST'), false);
+    assert.equal(facebook.isVideoPost('/baz', 'POST'), false);
+
+    done = true;
+  },
+
+  requestToGraphVideoDomain: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret
+    });
+
+    facebook.makeRequest = function(host, path, params, callback) {
+      assert.equal(host, 'graph-video.facebook.com');
+      callback(null, '{ "test": "ok" }');
+    };
+
+    facebook.graph('/amachang/videos', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.graph('/foo/videos', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.makeRequest = function(host, path, params, callback) {
+      assert.equal(host, 'graph.facebook.com');
+      callback(null, '{ "test": "ok" }');
+    };
+
+    facebook.graph('/bar/videossss', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.graph('/videos', 'POST', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    facebook.graph('/baz/videos', 'GET', function(err, data) {
+      assert.equal(err, null);
+      assert.equal(data.test, 'ok');
+    });
+
+    done = true;
+  },
+
   graph: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
@@ -1472,6 +1542,93 @@ module.exports = {
         });
       });
     });
+  },
+
+  destroySession: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        headers: {
+          host: 'www.test.com'
+        },
+        cookies: {
+            fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ'
+        }
+      }
+    });
+
+    assert.notEqual(facebook.getSignedRequest(), null);
+    facebook.destroySession();
+    assert.equal(facebook.getSignedRequest(), null);
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        headers: {
+          host: 'www.test.com'
+        },
+        cookies: {
+            fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ'
+        }
+      },
+      response: {
+        clearCookie: function(cookieName, options) {
+          clearCookieLogs.push({
+            name: cookieName,
+            path: options.path,
+            domain: options.domain
+          });
+        }
+      }
+    });
+
+    var clearCookieLogs = [];
+
+    facebook.destroySession();
+
+    assert.equal(clearCookieLogs.length, 1);
+    assert.equal(clearCookieLogs[0].name, 'fbsr_117743971608120');
+    assert.equal(clearCookieLogs[0].path, '/');
+    assert.equal(clearCookieLogs[0].domain, '.www.test.com');
+
+    var facebook = new TransientFacebook({
+      appId: '117743971608120',
+      secret: '943716006e74d9b9283d4d5d8ab93204',
+      request: {
+        headers: {
+          host: 'www.test.com'
+        },
+        cookies: {
+          fbsr_117743971608120: '1sxR88U4SW9m6QnSxwCEw_CObqsllXhnpP5j2pxD97c.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImV4cGlyZXMiOjEyODEwNTI4MDAsIm9hdXRoX3Rva2VuIjoiMTE3NzQzOTcxNjA4MTIwfDIuVlNUUWpub3hYVVNYd1RzcDB1U2g5d19fLjg2NDAwLjEyODEwNTI4MDAtMTY3Nzg0NjM4NXx4NURORHBtcy1nMUM0dUJHQVYzSVdRX2pYV0kuIiwidXNlcl9pZCI6IjE2Nzc4NDYzODUifQ',
+          fbm_117743971608120: 'base_domain=basedomain.test.com'
+        }
+      },
+      response: {
+        clearCookie: function(cookieName, options) {
+          clearCookieLogs.push({
+            name: cookieName,
+            path: options.path,
+            domain: options.domain
+          });
+        }
+      }
+    });
+
+    clearCookieLogs = [];
+
+    facebook.destroySession();
+
+    assert.equal(clearCookieLogs.length, 1);
+    assert.equal(clearCookieLogs[0].name, 'fbsr_117743971608120');
+    assert.equal(clearCookieLogs[0].path, '/');
+    assert.equal(clearCookieLogs[0].domain, 'basedomain.test.com');
+
+    done = true;
   },
 
   makeRequest: function(beforeExit, assert) {
