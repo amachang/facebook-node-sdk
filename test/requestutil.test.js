@@ -16,7 +16,25 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.requestFacebookApi(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' }, function(err, data) {
+    var req = new requestUtil.requestFacebookApi(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' }, false, function(err, data) {
+      e = err;
+      d = data;
+      done = true;
+    });
+  },
+
+  simpleMultipartRequest: function(beforeExit, assert) {
+    var e = null;
+    var d = null;
+    var done = false;
+    beforeExit(function() {
+      assert.equal(e, null);
+      assert.notEqual(d, null);
+      assert.equal(JSON.parse(d).id, '1055572299');
+      assert.ok(done);
+    });
+
+    var req = new requestUtil.requestFacebookApi(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' }, true, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -35,7 +53,7 @@ module.exports = {
     });
 
     var req = new requestUtil.FacebookApiRequest(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' });
-    req.start(function(err, data) {
+    req.start(false, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -55,7 +73,7 @@ module.exports = {
 
     var req = new requestUtil.FacebookApiRequest(http, 'notfound.example.com', 80, '/', { method: 'GET' });
 
-    req.start(function(err, data) {
+    req.start(false, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -77,7 +95,7 @@ module.exports = {
 
     // break process
     req.selfBoundDataHandler = null;
-    req.start(function(err, data) {
+    req.start(false, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -105,7 +123,7 @@ module.exports = {
       return req.afterResponse_.apply(this, arguments);
     };
 
-    req.start(function(err, data) {
+    req.start(false, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -125,7 +143,7 @@ module.exports = {
     var req = new requestUtil.FacebookApiRequest(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' });
 
     req.detachDataAndEndAndErrorHandlers = null;
-    req.start(function(err, data) {
+    req.start(false, function(err, data) {
       e = err;
       d = data;
       done = true;
