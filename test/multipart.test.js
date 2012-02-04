@@ -1,6 +1,8 @@
 
 var path = require('path');
+var util = require('util');
 var fs = require('fs');
+var stream = require('stream');
 
 var basedir = path.join(__dirname, '..');
 var covdir = path.join(basedir, 'lib-cov');
@@ -32,23 +34,39 @@ module.exports = {
     done = true;
   },
 
-  addFile: function(beforeExit, assert) {
+  contentLength: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
 
     var multipart = new Multipart();
+    multipart.addText('foo', 'bar');
     multipart.addFile('src', __filename, function(err) {
       assert.equal(err, null);
-      multipart.addFile('src', __filename + '.notfound', function(err) {
-        assert.notEqual(err, null);
-        assert.equal(err.code, 'ENOENT');
 
-        multipart.addFile('src', __dirname, function(err) {
+      function CounterStream() {
+        this.writable = true;
+        this.length = 0;
+      }
+      util.inherits(CounterStream, stream.Stream);
+      CounterStream.prototype.write = function(data) {
+        this.length += data.length
+        return true;
+      };
+      CounterStream.prototype.end = function(data) {
+        if (data) this.write(data);
+        this.writable = false;
+        return true;
+      }
+      CounterStream.prototype.destroy = function() {};
+      CounterStream.prototype.destroySoon = function() {};
 
-          multipart.writeToStream(process.stdout, function() {
-            done = true;
-          });
-        });
+      var contentLength = multipart.getContentLength();
+
+      var counter = new CounterStream();
+      multipart.writeToStream(counter, function() {
+        assert.equal(counter.length, contentLength);
+
+        done = true;
       });
     });
   }
