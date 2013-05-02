@@ -386,6 +386,25 @@ module.exports = {
     assert.equal(facebook.getCode(), false, 'Expect getCode to fail, CSRF state not sent back.');
     done = true;
   },
+  
+  getCodeWithNullPrototype: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret,
+      request: {
+        query: Object.create(null)
+      }
+    });
+
+    facebook.establishCSRFTokenState();
+
+    var code = facebook.request.query.code = 'dummy';
+    facebook.request.query.state = facebook.getPersistentData('state');
+    assert.equal(code, facebook.getCode(), 'Expect code to be pulled from $_REQUEST[\'code\']');
+    done = true;
+  },
 
   getUserFromSignedRequest: function(beforeExit, assert) {
     var done = false;
