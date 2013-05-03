@@ -387,7 +387,7 @@ module.exports = {
     done = true;
   },
   
-  getCodeWithNullPrototype: function(beforeExit, assert) {
+  getCodeWithNullQueryPrototype: function(beforeExit, assert) {
     var done = false;
     beforeExit(function() { assert.ok(done) });
     var facebook = new TransientFacebook({
@@ -405,6 +405,27 @@ module.exports = {
     assert.equal(code, facebook.getCode(), 'Expect code to be pulled from $_REQUEST[\'code\']');
     done = true;
   },
+  
+  getCodeWithNullBodyPrototype: function(beforeExit, assert) {
+    var done = false;
+    beforeExit(function() { assert.ok(done) });
+    var facebook = new TransientFacebook({
+      appId: config.appId,
+      secret: config.secret,
+      request: {
+        body: Object.create(null),
+        query: Object.create(null)
+      }
+    });
+
+    facebook.establishCSRFTokenState();
+
+    var code = facebook.request.body.code = 'dummy';
+    facebook.request.query.state = facebook.getPersistentData('state');
+    assert.equal(code, facebook.getCode(), 'Expect code to be pulled from $_REQUEST[\'code\']');
+    done = true;
+  },
+  
 
   getUserFromSignedRequest: function(beforeExit, assert) {
     var done = false;
