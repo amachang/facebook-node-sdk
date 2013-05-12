@@ -495,36 +495,36 @@ module.exports = {
           assert.equal(params.code, 'dummy');
           callback(new Error('test'), null);
         };
-        facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+        facebook.getAccessTokenFromCode('dummy', 'http://example.com/', 'GET', function(err, response) {
           assert.ok(err instanceof Error);
           assert.equal(err.message, 'test');
           assert.equal(response, null);
 
-          facebook.oauthRequest = function(host, path, params, callback) {
+          facebook.oauthRequest = function(host, path, params, method, callback) {
             callback(new BaseFacebook.FacebookApiError({}), null);
           };
-          facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+          facebook.getAccessTokenFromCode('dummy', 'http://example.com/', 'GET', function(err, response) {
             assert.equal(err, null);
             assert.equal(response, false);
 
-            facebook.oauthRequest = function(host, path, params, callback) {
+            facebook.oauthRequest = function(host, path, params, method, callback) {
               callback(null, {});
             };
-            facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+            facebook.getAccessTokenFromCode('dummy', 'http://example.com/', 'GET', function(err, response) {
               assert.equal(err, null);
               assert.equal(response, false);
 
-              facebook.oauthRequest = function(host, path, params, callback) {
+              facebook.oauthRequest = function(host, path, params, method, callback) {
                 callback(null, { access_token: 'test_access_token' });
               };
-              facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+              facebook.getAccessTokenFromCode('dummy', 'http://example.com/', 'GET',  function(err, response) {
                 assert.equal(err, null);
                 assert.equal(response, false);
 
-                facebook.oauthRequest = function(host, path, params, callback) {
+                facebook.oauthRequest = function(host, path, params, method, callback) {
                   callback(null, 'access_token=dummy-access-token&expires=3600');
                 };
-                facebook.getAccessTokenFromCode('dummy', 'http://example.com/', function(err, response) {
+                facebook.getAccessTokenFromCode('dummy', 'http://example.com/', 'GET', function(err, response) {
                   assert.equal(err, null);
                   assert.equal(response, 'dummy-access-token');
                   done = true;
