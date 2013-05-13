@@ -16,7 +16,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.requestFacebookApi(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' }, false, function(err, data) {
+    var req = new requestUtil.requestFacebookApi( 'graph.facebook.com', 443, '/amachang', {  }, 'GET', false, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -34,7 +34,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.requestFacebookApi(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' }, true, function(err, data) {
+    var req = new requestUtil.requestFacebookApi('graph.facebook.com', 443, '/amachang', {  }, 'GET', true, function(err, data) {
       e = err;
       d = data;
       done = true;
@@ -52,7 +52,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.FacebookApiRequest(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' });
+    var req = new requestUtil.FacebookApiRequest( 'graph.facebook.com', 443, '/amachang', {  }, 'GET');
     req.start(false, function(err, data) {
       e = err;
       d = data;
@@ -71,7 +71,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.FacebookApiRequest(http, 'notfound.example.com', 80, '/', { method: 'GET' });
+    var req = new requestUtil.FacebookApiRequest( 'notfound.example.com', 80, '/', {  }, 'GET');
 
     req.start(false, function(err, data) {
       e = err;
@@ -91,7 +91,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.FacebookApiRequest(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' });
+    var req = new requestUtil.FacebookApiRequest( 'graph.facebook.com', 443, '/amachang', {  }, 'GET');
 
     // break process
     req.selfBoundDataHandler = null;
@@ -113,7 +113,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.FacebookApiRequest(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' });
+    var req = new requestUtil.FacebookApiRequest( 'graph.facebook.com', 443, '/amachang', {  }, 'GET');
 
     req.afterResponse_ = req.afterResponse;
     req.afterResponse = function() {
@@ -140,7 +140,7 @@ module.exports = {
       assert.ok(done);
     });
 
-    var req = new requestUtil.FacebookApiRequest(https, 'graph.facebook.com', 443, '/amachang', { method: 'GET' });
+    var req = new requestUtil.FacebookApiRequest( 'graph.facebook.com', 443, '/amachang', {  }, 'GET');
 
     req.detachDataAndEndAndErrorHandlers = null;
     req.start(false, function(err, data) {
