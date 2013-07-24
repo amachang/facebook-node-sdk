@@ -19,7 +19,7 @@ To install the most recent release from npm, run:
 
     var Facebook = require('facebook-node-sdk');
     
-    var facebook = new Facebook({ appID: 'YOUR_APP_ID', secret: 'YOUR_APP_SECRET' });
+    var facebook = new Facebook({ appId: 'YOUR_APP_ID', secret: 'YOUR_APP_SECRET' });
     
     facebook.api('/amachang', function(err, data) {
       console.log(data); // => { id: ... }
