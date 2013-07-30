@@ -17,12 +17,27 @@ To install the most recent release from npm, run:
 
 ## Synopsis
 
+### Graph API
+
     var Facebook = require('facebook-node-sdk');
     
     var facebook = new Facebook({ appID: 'YOUR_APP_ID', secret: 'YOUR_APP_SECRET' });
     
     facebook.api('/amachang', function(err, data) {
       console.log(data); // => { id: ... }
+    });
+
+### FQL
+
+    var Facebook = require('facebook-node-sdk');
+    
+    var facebook = new Facebook({ appID: 'YOUR_APP_ID', secret: 'YOUR_APP_SECRET' });
+    
+    facebook.api({
+        method: 'fql.query',
+        query: 'SELECT uid FROM user WHERE uid=me()'
+    }, function (err, res) {
+        console.log(res);
     });
 
 ### With express framework (as connect middleware)
