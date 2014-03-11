@@ -1,6 +1,6 @@
 {
   "name": "facebook-node-sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Node.js SDK for the Facebook API",
   "tags": [
     "facebook"
