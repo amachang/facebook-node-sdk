@@ -46,3 +46,7 @@ To install the most recent release from npm, run:
       });
     });
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Costent/facebook-node-sdk/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
