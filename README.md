@@ -25,24 +25,26 @@ To install the most recent release from npm, run:
       console.log(data); // => { id: ... }
     });
 
-### With express framework (as connect middleware)
+### With express 4x framework
 
     var express = require('express');
     var Facebook = require('facebook-node-sdk');
+    var bodyParser = require('body-parser');
+    var cookieParser = require('cookie-parser');
+    var expressSession = require('express-session');
     
-    var app = express.createServer();
+    var app = express();
     
-    app.configure(function () {
-      app.use(express.bodyParser());
-      app.use(express.cookieParser());
-      app.use(express.session({ secret: 'foo bar' }));
-      app.use(Facebook.middleware({ appId: 'YOUR_APP_ID', secret: 'YOUR_APP_SECRET' }));
-    });
-    
+    app.use(bodyParser());
+    app.use(cookieParser());
+    app.use(expressSession({ secret: 'foobar' }));
+    app.use(Facebook.middleware({appId:'YOUR_APP_ID',secret:'YOUR_APP_SECRET'}));
+
     app.get('/', Facebook.loginRequired(), function (req, res) {
-      req.facebook.api('/me', function(err, user) {
-        res.writeHead(200, {'Content-Type': 'text/plain'});
-        res.end('Hello, ' + user.name + '!');
+    
+      	req.facebook.api('/me', function(err, user) {
+        res.send('Hello, ' + user.name + '!');
       });
     });
-
+    
+    app.listen(8080, '127.0.0.1');
