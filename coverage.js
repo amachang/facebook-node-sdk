@@ -18,7 +18,7 @@ rm.on('exit', function(code) {
     expresso.on('exit', function(code) {
       var rm = spawn('rm', ['-rf', 'lib-cov']).on('exit', function() {
         if (code !== 0) {
-          consnole.log('Failure: expresso');
+          console.log('Failure: expresso');
         }
       });
     });
